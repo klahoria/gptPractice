@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema({
         match: /^[a-zA-Z0-9]+$/,  // equivalent to .alphanum()
         trim: true
     },
-
     password: {
         type: String,
         required: true,
@@ -18,12 +17,11 @@ const userSchema = new mongoose.Schema({
         maxlength: 30,
         match: /^[a-zA-Z0-9]{3,30}$/
     },
-
-    birth_year: {
-        type: Number,
+    dob: {
+        type: Date,
         required: true,
-        min: 1900,
-        max: new Date().getFullYear() - 10
+        min: new Date('01-01-1960'),
+        max: new Date().setFullYear(new Date().getFullYear() - 4)
     },
 
     email: {

@@ -1,5 +1,6 @@
 import express from 'express';
 import morgan from "morgan";
+import route from './routes/users.routes.js';
 
 const app = express();
 
@@ -16,5 +17,7 @@ app.get('/favicon.ico', (req, res) => {
     return 'hello'
 })
 
+
+app.use('/', route)
 
 export default app;
