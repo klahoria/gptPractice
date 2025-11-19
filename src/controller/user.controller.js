@@ -163,7 +163,7 @@ async function logout(req, res) {
 
     if (token) {
         const decoded = jwt.decode(token);
-        await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+        await userDevices.findOneAndUpdate({user_id: decoded.id, is_deleted: 0}, { refresh_token: null, is_deleted: 1, logout_at: new Date().toString() });
     }
 
     res.clearCookie("refreshToken");
