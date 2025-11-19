@@ -1,5 +1,8 @@
 import { isObjectIdOrHexString, isValidObjectId } from 'mongoose';
 import User from '../models/users.model.js';
+import { generateAccessToken, generateRefreshToken } from '../middleware/jwt/jwt.token.js'
+import UserDevices from '../models/users.deivces.model.js';
+
 
 async function signup(req, res) {
     let { username, email, password, dob } = req.body;
@@ -93,16 +96,20 @@ async function updateUserDetails(req, res) {
 async function userLogin(req, res) {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).send({ message: "Invalid credentials" });
+    const users = await User.findOne({ email });
+    if (!users) return res.status(401).send({ message: "Invalid credentials" });
 
     // Compare password...
+
+    let user = new UserDevices({});
 
     const accessToken = generateAccessToken({ id: user._id });
     const refreshToken = generateRefreshToken({ id: user._id });
 
     // Save refresh token in DB
-    user.refreshToken = refreshToken;
+    user.refresh_token = refreshToken;
+    user.auth_token = accessToken;
+    user.user_id = users["_id"];
     await user.save();
 
     // Send refresh token in HTTP-only cookie
@@ -118,8 +125,7 @@ async function userLogin(req, res) {
         message: "Login successful",
     });
 }
-
-router.post("/refresh-token", async (req, res) => {
+async function refreshToken(req, res) {
     const token = req.cookies.refreshToken;
 
     if (!token) return res.status(401).send({ message: "No refresh token provided" });
@@ -149,7 +155,18 @@ router.post("/refresh-token", async (req, res) => {
 
         return res.send({ accessToken: newAccessToken });
     });
-});
+}
 
+async function logout(req, res) {
+    const token = req.cookies.refreshToken;
 
-export { signup, getUsers, deleteuser, updateUserDetails, userLogin }
+    if (token) {
+        const decoded = jwt.decode(token);
+        await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+    }
+
+    res.clearCookie("refreshToken");
+    res.send({ message: "Logged out" });
+}
+
+export { signup, getUsers, deleteuser, updateUserDetails, userLogin, refreshToken, logout }

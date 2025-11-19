@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, getUsers, deleteuser, updateUserDetails, userLogin } from '../controller/user.controller.js';
+import { signup, getUsers, deleteuser, updateUserDetails, userLogin, refreshToken, logout } from '../controller/user.controller.js';
 import RegisterUserData from '../vaildators/validationSchema/users.validator.js'
 import DeleteuserSchema from '../vaildators/validationSchema/deleteUser.validator.js';
 import LoginUserSchema from '../vaildators/validationSchema/login.validator.js';
@@ -8,11 +8,13 @@ import UpdateUserSchemaBody from '../vaildators/validationSchema/udpateUser.vali
 const route = express.Router();
 
 
-route.get('/users', RegisterUserData, getUsers)
-route.get('/users/:userId', RegisterUserData, getUsers)
-route.put('/udpate_user_details/:userId', UpdateUserSchemaBody.params, UpdateUserSchemaBody.body, updateUserDetails)
-route.post('/signup', RegisterUserData, signup)
-route.delete('/delete_users/:userId', DeleteuserSchema, deleteuser)
-route.post('/login', LoginUserSchema, userLogin)
+route.get('/users', RegisterUserData, getUsers);
+route.get('/users/:userId', RegisterUserData, getUsers);
+route.put('/udpate_user_details/:userId', UpdateUserSchemaBody.params, UpdateUserSchemaBody.body, updateUserDetails);
+route.post('/signup', RegisterUserData, signup);
+route.delete('/delete_users/:userId', DeleteuserSchema, deleteuser);
+route.post('/login', LoginUserSchema, userLogin);
+route.post('/refresh-token', refreshToken);
+route.post('/logout', logout);
 
 export default route;
