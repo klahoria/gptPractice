@@ -1,7 +1,8 @@
 import { isObjectIdOrHexString, isValidObjectId } from 'mongoose';
 import User from '../models/users.model.js';
 import { generateAccessToken, generateRefreshToken } from '../middleware/jwt/jwt.token.js'
-import UserDevices from '../models/users.deivces.model.js';
+import userDevices from '../models/users.deivces.model.js';
+import jwt from "jsonwebtoken";
 
 
 async function signup(req, res) {
@@ -96,15 +97,15 @@ async function updateUserDetails(req, res) {
 async function userLogin(req, res) {
     const { email, password } = req.body;
 
-    const users = await User.findOne({ email });
+    const users = await User.findOne({ email }).lean();
     if (!users) return res.status(401).send({ message: "Invalid credentials" });
 
     // Compare password...
 
-    let user = new UserDevices({});
-
-    const accessToken = generateAccessToken({ id: user._id });
-    const refreshToken = generateRefreshToken({ id: user._id });
+    let user = new userDevices({});
+    let id = String(users._id);
+    const accessToken = generateAccessToken({ id });
+    const refreshToken = generateRefreshToken({ id });
 
     // Save refresh token in DB
     user.refresh_token = refreshToken;
@@ -134,17 +135,17 @@ async function refreshToken(req, res) {
     jwt.verify(token, process.env.REFRESH_SECRET, async (err, decoded) => {
         if (err) return res.status(403).send({ message: "Invalid refresh token" });
 
-        const user = await User.findById(decoded.id);
-        if (!user || user.refreshToken !== token) {
+        const user = await userDevices.findOne({ user_id: decoded.id, id_deleted: 0 }).sort({ createdAt: -1 });
+        if (!user || user.refresh_token !== token) {
             return res.status(403).send({ message: "Refresh token mismatch" });
         }
 
         // Generate new access token
-        const newAccessToken = generateAccessToken({ id: user._id });
+        const newAccessToken = generateAccessToken({ id: user['user_id'] });
 
         // OPTIONAL: rotate refresh token
-        const newRefreshToken = generateRefreshToken({ id: user._id });
-        user.refreshToken = newRefreshToken;
+        const newRefreshToken = generateRefreshToken({ id: user['user_id'] });
+        user.refresh_token = newRefreshToken;
         await user.save();
 
         res.cookie("refreshToken", newRefreshToken, {

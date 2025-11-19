@@ -4,7 +4,8 @@ import bcrypt from 'bcrypt';
 const userSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
-        required: 1,
+        ref: "User",
+        required: true,
     },
     auth_token: {
         type: String,
@@ -19,12 +20,12 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     id_deleted: {
-        type: Boolean,
-        default: false
+        type: Number,
+        default: 0
     },
 }, {
     timestamps: true
 });
 
-const UserDevices = mongoose.model('userDevices', userSchema);
-export default UserDevices;
+const userDevices = mongoose.model('userDevices', userSchema);
+export default userDevices;
