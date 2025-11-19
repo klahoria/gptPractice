@@ -90,4 +90,66 @@ async function updateUserDetails(req, res) {
     }
 }
 
-export { signup, getUsers, deleteuser, updateUserDetails }
+async function userLogin(req, res) {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).send({ message: "Invalid credentials" });
+
+    // Compare password...
+
+    const accessToken = generateAccessToken({ id: user._id });
+    const refreshToken = generateRefreshToken({ id: user._id });
+
+    // Save refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // Send refresh token in HTTP-only cookie
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+    });
+
+    return res.send({
+        accessToken,
+        message: "Login successful",
+    });
+}
+
+router.post("/refresh-token", async (req, res) => {
+    const token = req.cookies.refreshToken;
+
+    if (!token) return res.status(401).send({ message: "No refresh token provided" });
+
+    // Verify refresh token
+    jwt.verify(token, process.env.REFRESH_SECRET, async (err, decoded) => {
+        if (err) return res.status(403).send({ message: "Invalid refresh token" });
+
+        const user = await User.findById(decoded.id);
+        if (!user || user.refreshToken !== token) {
+            return res.status(403).send({ message: "Refresh token mismatch" });
+        }
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken({ id: user._id });
+
+        // OPTIONAL: rotate refresh token
+        const newRefreshToken = generateRefreshToken({ id: user._id });
+        user.refreshToken = newRefreshToken;
+        await user.save();
+
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+        });
+
+        return res.send({ accessToken: newAccessToken });
+    });
+});
+
+
+export { signup, getUsers, deleteuser, updateUserDetails, userLogin }
