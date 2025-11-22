@@ -15,6 +15,7 @@
     "bcrypt": "^6.0.0",
     "brcypt": "^1.0.1",
     "chalk": "^5.6.2",
+    "cloudinary": "^2.8.0",
     "cookie-parser": "^1.4.7",
     "cookies": "^0.9.1",
     "cors": "^2.8.5",
