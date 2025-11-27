@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         trim: true,
         match: /^[^\s@]+@[^\s@]+\.(com|net)$/ // equivalent to Joi .email({tlds:...})
+    },
+    role: {
+        type: String,
+        enum: ['1', '2', '3'], //1 for super admin, 2 for manager, 3 for user
+        default: '3'
     }
 }, {
     timestamps: true

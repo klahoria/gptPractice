@@ -1,12 +1,18 @@
 import jwt from 'jsonwebtoken';
+import User from '../../models/users.model.js';
 
-function Auth(req, res, next) {
+async function Auth(req, res, next) {
     try {
         let token = String(req.headers.authorization || '').split(' ')[1];
 
         if (!token) return res.status(401).json({ message: "UnAuthorized" });
 
         req.user = jwt.verify(token, process.env.ACCESS_SECRET);
+
+        let user = await User.findById(req.user.id)
+
+        req.user.role = user.role || 3;
+
         next();
 
     } catch (error) {
@@ -19,7 +25,7 @@ function Auth(req, res, next) {
 function RoleAuth(...roles) {
     return (req, res, next) => {
         try {
-            if (!roles.includes(req.user.role)) {
+            if (!roles.includes(Number(req.user.role || req.role))) {
                 return res.status(403).json({ message: "Access Denied" })
             }
             next()

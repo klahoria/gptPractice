@@ -9,11 +9,11 @@ import Auth, { RoleAuth } from "../middleware/jwt/auth.js"
 const route = express.Router();
 
 
-route.get('/users', Auth, RoleAuth(1), RegisterUserData, getUsers);
+route.get('/users', Auth, RoleAuth(1,2,3), RegisterUserData, getUsers);
 route.get('/users/:userId', RegisterUserData, getUsers);
 route.put('/udpate_user_details/:userId', UpdateUserSchemaBody.params, UpdateUserSchemaBody.body, updateUserDetails);
 route.post('/signup', RegisterUserData, signup);
-route.delete('/delete_users/:userId', RoleAuth(1), DeleteuserSchema, deleteuser);
+route.delete('/delete_users/:userId',Auth, RoleAuth(1), DeleteuserSchema, deleteuser);
 route.post('/login', LoginUserSchema, userLogin);
 route.post('/refresh-token', refreshToken);
 route.post('/logout', logout);
